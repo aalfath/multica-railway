@@ -116,6 +116,10 @@ multica setup self-host --server-url "$MULTICA_SERVER_URL" --app-url "$MULTICA_A
 multica daemon status
 ```
 
+With both Railway URL variables present, plain `multica setup` selects this
+self-hosted configuration automatically. Use `multica setup cloud` to force the
+Multica Cloud endpoints.
+
 OpenCode credentials, the Multica CLI token, daemon logs, and task workspaces
 are stored under the Backend volume. `opencode auth login` is interactive and
 must be completed by the operator; the container cannot create provider

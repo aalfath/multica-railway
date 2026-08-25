@@ -39,6 +39,10 @@ multica setup self-host \
 multica daemon status
 ```
 
+The plain `multica setup` command also detects the Railway `MULTICA_SERVER_URL`
+and `MULTICA_APP_URL` values and selects the self-hosted flow automatically.
+Use `multica setup cloud` only when you explicitly want the Multica Cloud URLs.
+
 If the OAuth callback cannot reach the SSH session directly, follow the tunnel
 hint printed by `multica setup self-host`, or use a Multica personal access token
 with `multica login --token=`.

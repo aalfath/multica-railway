@@ -70,17 +70,20 @@ daemon_autostart_loop() {
   daemon_app_url="${MULTICA_DAEMON_APP_URL:-${MULTICA_APP_URL:-}}"
 
   while :; do
+    # Keep the persistent CLI profile pointed at this deployment even when no
+    # unattended token is configured. This prevents a manual `multica setup`
+    # from leaving the Railway container pointed at Multica Cloud.
+    if [ -n "$daemon_server_url" ]; then
+      ./multica config set server_url "$daemon_server_url" >/dev/null 2>&1 || true
+    fi
+    if [ -n "$daemon_app_url" ]; then
+      ./multica config set app_url "$daemon_app_url" >/dev/null 2>&1 || true
+    fi
+
     # A token supplied as a Railway secret can complete the same setup sequence
     # the UI prints: persist the server/app URLs, log in, and then start the
     # daemon. The token is piped to the CLI prompt instead of placed in argv.
     if [ -n "$daemon_token" ]; then
-      if [ -n "$daemon_server_url" ]; then
-        ./multica config set server_url "$daemon_server_url" >/dev/null 2>&1 || true
-      fi
-      if [ -n "$daemon_app_url" ]; then
-        ./multica config set app_url "$daemon_app_url" >/dev/null 2>&1 || true
-      fi
-
       daemon_auth_status="$(./multica auth status 2>&1 || true)"
       if ! printf '%s\n' "$daemon_auth_status" | grep -q 'User:'; then
         if printf '%s\n' "$daemon_token" | ./multica login --token= >/dev/null 2>&1; then

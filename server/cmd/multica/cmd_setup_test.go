@@ -270,6 +270,46 @@ func TestResolveSelfHostServerURL(t *testing.T) {
 	})
 }
 
+func TestSetupSelfHostFromEnvironment(t *testing.T) {
+	newCmd := func() *cobra.Command {
+		c := &cobra.Command{}
+		c.Flags().String("server-url", "", "")
+		return c
+	}
+
+	t.Run("selects self-host for non-cloud Railway URLs", func(t *testing.T) {
+		t.Setenv("MULTICA_SERVER_URL", "https://backend.example.com")
+		t.Setenv("MULTICA_APP_URL", "https://frontend.example.com")
+		if !setupSelfHostFromEnvironment(newCmd()) {
+			t.Fatal("setupSelfHostFromEnvironment() = false, want true")
+		}
+	})
+
+	t.Run("keeps cloud defaults on the cloud path", func(t *testing.T) {
+		t.Setenv("MULTICA_SERVER_URL", defaultCloudServerURL)
+		t.Setenv("MULTICA_APP_URL", defaultCloudAppURL)
+		if setupSelfHostFromEnvironment(newCmd()) {
+			t.Fatal("setupSelfHostFromEnvironment() = true, want false")
+		}
+	})
+
+	t.Run("normalizes the documented websocket server URL", func(t *testing.T) {
+		t.Setenv("MULTICA_SERVER_URL", "wss://backend.example.com/ws")
+		t.Setenv("MULTICA_APP_URL", "https://frontend.example.com")
+		if !setupSelfHostFromEnvironment(newCmd()) {
+			t.Fatal("setupSelfHostFromEnvironment() = false, want true")
+		}
+	})
+
+	t.Run("requires both deployment URLs", func(t *testing.T) {
+		t.Setenv("MULTICA_SERVER_URL", "https://backend.example.com")
+		t.Setenv("MULTICA_APP_URL", "")
+		if setupSelfHostFromEnvironment(newCmd()) {
+			t.Fatal("setupSelfHostFromEnvironment() = true, want false")
+		}
+	})
+}
+
 // TestSelfHostAppURLHonorsEnv pins the app-url half of the GitHub #3912 fix:
 // setup self-host resolves --app-url through the same FlagOrEnv path, so
 // MULTICA_APP_URL is honored when the flag is absent.

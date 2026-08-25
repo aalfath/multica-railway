@@ -19,12 +19,15 @@ import (
 var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Configure the CLI, authenticate, and start the daemon",
-	Long: `Configures the CLI to connect to Multica Cloud (multica.ai), then
-authenticates via browser and starts the agent daemon.
+	Long: `Configures the CLI to connect to Multica Cloud (multica.ai), or to the
+self-hosted URLs in MULTICA_SERVER_URL and MULTICA_APP_URL when they point at a
+non-cloud deployment. It then authenticates via browser and starts the agent
+daemon.
 
 If a configuration already exists, you will be prompted before overwriting.
 
-Use 'multica setup self-host' to connect to a self-hosted server instead.
+Use 'multica setup cloud' to explicitly select Multica Cloud, or
+'multica setup self-host' to provide self-host URLs explicitly.
 
 If you run this command over SSH on a remote machine, keep the localhost
 callback and follow the SSH tunnel hint printed during browser login. If your
@@ -33,7 +36,7 @@ browser can reach this CLI directly on a private network address, pass
 
 Use --profile to create an isolated configuration for a separate environment:
   multica setup self-host --profile staging --server-url https://api-staging.co`,
-	RunE: runSetupCloud,
+	RunE: runSetupDefault,
 }
 
 var setupCloudCmd = &cobra.Command{
@@ -178,6 +181,30 @@ func runSetupCloud(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(os.Stderr, "\n✓ Setup complete! Your machine is now connected to Multica.")
 
 	return nil
+}
+
+// runSetupDefault keeps `multica setup` convenient for both cloud and
+// self-hosted installations. A deployed self-hosted container already exposes
+// its public API and app URLs through MULTICA_SERVER_URL and MULTICA_APP_URL;
+// selecting self-host in that case prevents the generic command from silently
+// writing the Multica Cloud endpoints into the container's persistent profile.
+// `multica setup cloud` remains the explicit escape hatch for cloud users.
+func runSetupDefault(cmd *cobra.Command, args []string) error {
+	if setupSelfHostFromEnvironment(cmd) {
+		return runSetupSelfHost(cmd, args)
+	}
+	return runSetupCloud(cmd, args)
+}
+
+func setupSelfHostFromEnvironment(cmd *cobra.Command) bool {
+	serverURL := cli.FlagOrEnv(cmd, "server-url", "MULTICA_SERVER_URL", "")
+	appURL := strings.TrimRight(strings.TrimSpace(os.Getenv("MULTICA_APP_URL")), "/")
+	if strings.TrimSpace(serverURL) == "" || appURL == "" {
+		return false
+	}
+
+	serverURL = normalizeAPIBaseURL(serverURL)
+	return !(serverURL == defaultCloudServerURL && appURL == defaultCloudAppURL)
 }
 
 func runSetupSelfHost(cmd *cobra.Command, args []string) error {
