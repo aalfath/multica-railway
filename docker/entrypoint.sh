@@ -7,6 +7,10 @@ set -eu
 # a stale timestamp after a container restart.
 export MULTICA_INTERNAL_DATABASE_STARTUP_STARTED_AT_UNIX="$(date +%s)"
 
+# These directories live on the Railway backend volume. Creating them at
+# startup is necessary because volumes are mounted after the image is built.
+mkdir -p "$HOME" "$MULTICA_WORKSPACES_ROOT" /app/data/uploads
+
 migrate_pid=""
 
 stop_migration() {
