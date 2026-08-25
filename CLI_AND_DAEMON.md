@@ -101,6 +101,32 @@ The daemon is the local agent runtime. It detects available AI CLIs on your mach
 multica daemon start
 ```
 
+### Railway-hosted Backend
+
+The Railway Multica template includes the daemon runtime and OpenCode in its
+Backend container. The container retries daemon startup automatically once the
+CLI has a valid Multica login token. Configure the LLM provider from a Railway
+SSH session:
+
+```bash
+railway ssh --service Backend
+opencode auth login
+opencode auth list
+multica setup self-host --server-url "$MULTICA_SERVER_URL" --app-url "$MULTICA_APP_URL"
+multica daemon status
+```
+
+OpenCode credentials, the Multica CLI token, daemon logs, and task workspaces
+are stored under the Backend volume. `opencode auth login` is interactive and
+must be completed by the operator; the container cannot create provider
+credentials automatically.
+
+To avoid repeating CLI authentication after a container restart, configure a
+Railway secret named `MULTICA_DAEMON_TOKEN` with a Multica personal access token.
+The entrypoint persists that token in the CLI profile and retries daemon startup.
+If the variable is omitted, authenticate once with `multica setup self-host` or
+`multica login --token=` over Railway SSH.
+
 By default, the daemon runs in the background and writes its log into the state
 directory of the profile it was started with — **not always `~/.multica/`**:
 

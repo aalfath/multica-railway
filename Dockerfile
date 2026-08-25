@@ -48,12 +48,15 @@ WORKDIR /app
 # Railway mounts the backend volume at /app/data. Persist the CLI daemon state,
 # OpenCode credentials/configuration, task workspaces, and local uploads there.
 ENV HOME=/app/data/home \
+    MULTICA_DATA_ROOT=/app/data \
     MULTICA_WORKSPACES_ROOT=/app/data/workspaces \
     XDG_CONFIG_HOME=/app/data/home/.config \
     XDG_DATA_HOME=/app/data/home/.local/share \
     XDG_STATE_HOME=/app/data/home/.local/state \
     OPENCODE_CONFIG_DIR=/app/data/home/.config/opencode \
     OPENCODE_DISABLE_AUTOUPDATE=true \
+    MULTICA_DAEMON_AUTO_START=true \
+    MULTICA_DAEMON_AUTO_START_INTERVAL=30 \
     PATH=/app:/app/data/home/.local/bin:$PATH
 
 COPY --from=builder /src/server/bin/server .

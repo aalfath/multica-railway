@@ -12,6 +12,43 @@ Deploy Multica on your own infrastructure in minutes.
 
 Each user who runs AI agents locally also installs the **`multica` CLI** and runs the **agent daemon** on their own machine.
 
+## Railway Template Onboarding
+
+The Railway template is a supported exception to the local-daemon layout above:
+the Backend image includes the `multica` CLI, OpenCode, Git, and persistent daemon
+state. The container automatically retries daemon startup after authentication is
+available.
+
+After deploying the template, use the Railway CLI to configure the LLM provider
+inside the Backend container:
+
+```bash
+railway ssh --service Backend
+opencode auth login
+opencode auth list
+```
+
+Then authenticate the CLI with the self-hosted Multica server. This command also
+starts the daemon; the container's auto-start loop keeps it running after future
+restarts:
+
+```bash
+multica setup self-host \
+  --server-url "$MULTICA_SERVER_URL" \
+  --app-url "$MULTICA_APP_URL"
+multica daemon status
+```
+
+If the OAuth callback cannot reach the SSH session directly, follow the tunnel
+hint printed by `multica setup self-host`, or use a Multica personal access token
+with `multica login --token=`.
+
+For unattended daemon authentication after restarts, add the personal access
+token as a Railway secret named `MULTICA_DAEMON_TOKEN`. The entrypoint stores it
+in the persistent CLI profile and retries the daemon automatically. This only
+handles Multica authentication; OpenCode provider credentials must still be
+registered interactively with `opencode auth login`.
+
 ## Quick Install (Recommended)
 
 Two commands to set up everything — server, CLI, and configuration.
