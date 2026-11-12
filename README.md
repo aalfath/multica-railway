@@ -8,6 +8,8 @@
 
 # Multica
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/multica-railway-template?utm_medium=integration&utm_source=button&utm_campaign=multica)
+
 **Agents that show up on the board.**
 
 Multica is an open-source workspace where you assign work to AI coding agents the way you'd
